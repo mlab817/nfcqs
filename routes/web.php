@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,13 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 Auth::routes();
-
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // approve new user registration
 Route::get('confirm', 'Auth\RegisterController@confirmEmail');
@@ -28,37 +23,35 @@ Route::get('confirm', 'Auth\RegisterController@confirmEmail');
 Route::group(['middleware' => 'auth'], function () {
 
     // dashboard
-    Route::get('/', [\App\Http\Controllers\InputController::class,'commodities']);
-    Route::get('home', [\App\Http\Controllers\InputController::class,'commodities']);
-    Route::get('result', [\App\Http\Controllers\DashboardController::class,'result']);
-    Route::get('province', [\App\Http\Controllers\DownloadController::class,'provinceForecast']);
-    Route::get('map-control', [\App\Http\Controllers\DashboardController::class,'mapControl']);
-    Route::post('map-display', [\App\Http\Controllers\DashboardController::class,'displayMap']);
+    Route::get('/', [\App\Http\Controllers\InputController::class,'commodities'])->name('dashboard');
+    Route::get('home', [\App\Http\Controllers\InputController::class,'commodities'])->name('home');
+    Route::get('result', [\App\Http\Controllers\DashboardController::class,'result'])->name('result');
+    Route::get('province', [\App\Http\Controllers\DownloadController::class,'provinceForecast'])->name('province_forecast');
+    Route::get('map-control', [\App\Http\Controllers\DashboardController::class,'mapControl'])->name('map_control');
+    Route::post('map-display', [\App\Http\Controllers\DashboardController::class,'displayMap'])->name('display_map');
 
     // input controls
-    Route::get('commodities', [\App\Http\Controllers\InputController::class,'commodities']);
-    Route::get('commodities/add', [\App\Http\Controllers\InputController::class,'addCommodity']);
-    Route::post('commodities/add', [\App\Http\Controllers\InputController::class,'saveCommodity']);
-    Route::get('reports/upload', [\App\Http\Controllers\InputController::class,'uploadReportForm']);
-    Route::post('reports/upload', [\App\Http\Controllers\InputController::class,'uploadReport']);
-    Route::get('reports/list', [\App\Http\Controllers\InputController::class,'reportList']);
-    Route::get('shifter', [\App\Http\Controllers\InputController::class,'addShifter']);
-    Route::get('import-baseline', [\App\Http\Controllers\InputController::class,'importBaseline']);
-    Route::get('crop/delete', [\App\Http\Controllers\InputController::class,'deleteCrop']);
+    Route::get('commodities', [\App\Http\Controllers\InputController::class,'commodities'])->name('commodities');
+    Route::get('commodities/add', [\App\Http\Controllers\InputController::class,'addCommodity'])->name('add_commodity');
+    Route::post('commodities/add', [\App\Http\Controllers\InputController::class,'saveCommodity'])->name('save_commodity');
+    Route::get('reports/upload', [\App\Http\Controllers\InputController::class,'uploadReportForm'])->name('upload_report_form');
+    Route::post('reports/upload', [\App\Http\Controllers\InputController::class,'uploadReport'])->name('upload_report');
+    Route::get('reports/list', [\App\Http\Controllers\InputController::class,'reportList'])->name('report_list');
+    Route::get('shifter', [\App\Http\Controllers\InputController::class,'addShifter'])->name('add_shifter');
+    Route::get('import-baseline', [\App\Http\Controllers\InputController::class,'importBaseline'])->name('import_baseline');
+    Route::get('crop/delete', [\App\Http\Controllers\InputController::class,'deleteCrop'])->name('delete_crop');
 
     // forecast
-    Route::post('forecast', [\App\Http\Controllers\ForecastController::class,'forecast']);
-    Route::get('forecast', [\App\Http\Controllers\ForecastController::class,'forecast']);
+    Route::post('forecast', [\App\Http\Controllers\ForecastController::class,'forecast'])->name('forecast.post');
+    Route::get('forecast', [\App\Http\Controllers\ForecastController::class,'forecast'])->name('forecast.get');
 
     // change password
-    Route::get('change-password', function() { return view('auth.password'); });
-    Route::post('change-password', 'Auth\ResetPasswordController@changePassword');
+    Route::view('change-password', 'auth.password')->name('change_password.index');
+    Route::post('change-password', 'Auth\ResetPasswordController@changePassword')->name('change_password.post');
 
     // user management
-    Route::get('users', [\App\Http\Controllers\UserController::class,'list']);
-    Route::get('user/edit', [\App\Http\Controllers\UserController::class,'editUserForm']);
-    Route::post('user/update', [\App\Http\Controllers\UserController::class,'updateUser']);
-    Route::get('user/access', [\App\Http\Controllers\UserController::class,'changeAccess']);
-    Route::get('user/delete', [\App\Http\Controllers\UserController::class,'deleteUser']);
+    Route::get('user/{user}/access', [\App\Http\Controllers\UserController::class,'changeAccess'])->name('users.access');
+
+    Route::resource('users', \App\Http\Controllers\UserController::class);
 
 });

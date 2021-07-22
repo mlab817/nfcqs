@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SrcCommodity;
+use App\Models\SrcProvince;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,25 +24,29 @@ class InputController extends Controller
     {
         $data = [];
 
-        $provinces = DB::table('crops')
-            ->select('src_provinces.*')
-            ->leftJoin('src_provinces', 'crops.src_province_id', '=', 'src_provinces.id')
-            ->where('crops.src_province_id', '<>', null)
-            ->where('crops.user_id', Auth::id())
-            ->distinct('province')
-            ->get();
+        $provinces = SrcProvince::whereHas('crops')->get();
+
+//        $provinces = DB::table('crops')
+//            ->select('src_provinces.*')
+//            ->leftJoin('src_provinces', 'crops.src_province_id', '=', 'src_provinces.id')
+//            ->where('crops.src_province_id', '<>', null)
+//            ->where('crops.user_id', Auth::id())
+//            ->distinct('province')
+//            ->get();
 
         if (sizeof($provinces) != 0) {
             foreach ($provinces as $key => $val) {
 
-                $commodities = DB::table('crops')
-                    ->select('crop.*', 'src_commodities.commodity', 'src_commodities.crop_type')
-                    ->leftJoin('src_commodities', 'crops.src_commodity_id', '=', 'src_commodities.id')
-                    ->where('src_province_id', $val->id)
-                    ->where('crops.user_id', Auth::user()->id)
-                    ->distinct('crops.src_commodity_id')
-                    ->orderBy('src_commodities.id', 'ASC')
-                    ->get();
+//                $commodities = DB::table('crops')
+//                    ->select('crops.*', 'src_commodities.commodity', 'src_commodities.crop_type')
+//                    ->leftJoin('src_commodities', 'crops.src_commodity_id', '=', 'src_commodities.id')
+//                    ->where('src_province_id', $val->id)
+//                    ->where('crops.user_id', Auth::user()->id)
+//                    ->distinct('crops.src_commodity_id')
+//                    ->orderBy('src_commodities.id', 'ASC')
+//                    ->get();
+
+                $commodities = SrcCommodity::whereHas('crops')->get();
 
                 $val->commodities = $commodities;
                 $data[$key] = $val;

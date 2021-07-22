@@ -6,5 +6,8 @@ use Illuminate\Http\Request;
 
 class DownloadController extends Controller
 {
-    //
+    public function provinceForecast()
+    {
+        return 'province_forecast';
+    }
 }

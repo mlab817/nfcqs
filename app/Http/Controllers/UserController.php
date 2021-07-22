@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,11 +20,7 @@ class UserController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'office' => 'required|max:100',
-            'full_name' => 'required|max:50',
-            'email' => 'required|email|max:60|unique:users,email,' . $data['id'],
-            'password' => 'required|min:6',
-            'password_confirmation' => 'same:password'
+
         ]);
     }
 
@@ -31,18 +28,20 @@ class UserController extends Controller
      * Update user instance.
      *
      * @param  array  $data
-     * @return User
+     * @return string
      */
-    protected function update(array $data)
+    protected function update(UserUpdateRequest $request, User $user)
     {
-        $user = User::find($data['id']);
+        if ($user->update($request->except('password'))) {
+            $user->password = bcrypt($request->password);
+            $user->save();
 
-        $user->office = $data['office'];
-        $user->full_name = $data['full_name'];
-        $user->email = $data['email'];
-        $user->password = bcrypt($data['password']);
+            session()->flash('msg', 'User account successfully updated.');
 
-        return $user->save();
+            return back();
+        } else {
+            return "Error. Could not update user account.";
+        }
     }
 
     /**
@@ -50,11 +49,9 @@ class UserController extends Controller
      *
      * @return void
      */
-    public function list()
+    public function index()
     {
-        $users = DB::table('users')
-            ->where('user_type', '<>', 0)
-            ->get();
+        $users = User::all();
 
         if (Auth::user()->user_type != 0) {
             return redirect('/');
@@ -72,46 +69,9 @@ class UserController extends Controller
      * @param Request $request
      * @return void
      */
-    public function editUserForm(Request $request)
+    public function edit(Request $request, User $user)
     {
-        $user = DB::table('users')
-            ->where('id', $request->input('id'))
-            ->first();
-
-        return view('edit-user')
-            ->with([
-                'user' => $user,
-                'id' => $request->input('id')
-            ]);
-    }
-
-    /**
-     * Update user.
-     *
-     * @param Request $request
-     * @return void
-     */
-    public function updateUser(Request $request)
-    {
-        // validate details
-        if ($this->validator($request->all())->fails()) {
-            return redirect('user/edit?id=' . $request->input('id'))
-                ->withInput()
-                ->withErrors($this->validator($request->all()));
-        }
-
-        // update user user
-        $updated = $this->update($request->all());
-
-        // check if user account is updated
-        if ($updated) {
-            return view('auth.register')
-                ->with([
-                    'msg' => "User account successfully updated."
-                ]);
-        } else {
-            return "Error. Cauld not update user account.";
-        }
+        return view('edit-user', compact('user'));
     }
 
     /**
@@ -120,15 +80,13 @@ class UserController extends Controller
      * @param Request $request
      * @return void
      */
-    public function changeAccess(Request $request)
+    public function changeAccess(Request $request, User $user)
     {
-        if (Auth::user()->user_type == 0) {
+        if (! Auth::user()->isAdmin()) {
 
-            $updated = DB::table('users')
-                ->where('id', $request->input('id'))
-                ->update([
-                    'is_active' => $request->input('action')
-                ]);
+            $updated = $user->update([
+                'is_active' => $request->input('action')
+            ]);
 
             if ($updated) {
                 return redirect('users');
@@ -147,12 +105,15 @@ class UserController extends Controller
      * @param Request $request
      * @return void
      */
-    public function deleteUser(Request $request)
+    public function deleteUser(Request $request, User $user)
     {
-        if (Auth::user()->user_type == 0) {
-            $user = User::find($request->input('id'));
-
-            if ($user->delete()) {
+        if (! Auth::user()->isAdmin()) {
+            return [
+                'error' => 1,
+                'msg' => "Access denied."
+            ];
+        } else {
+            if (! Auth::id() != $user->id) {
                 return [
                     'error' => 0,
                     'msg' => "User successfully deleted."
@@ -160,14 +121,9 @@ class UserController extends Controller
             } else {
                 return [
                     'error' => 1,
-                    'msg' => "Unable to delete this record."
+                    'msg' => "You cannot delete yourself."
                 ];
             }
-        } else {
-            return [
-                'error' => 1,
-                'msg' => "Access denied."
-            ];
         }
     }
 }

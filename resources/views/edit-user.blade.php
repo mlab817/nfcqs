@@ -1,4 +1,5 @@
 @extends('app')
+
 @section('content')
 <div id="page-content-wrapper">
     <div class="container-fluid">
@@ -11,16 +12,16 @@
                     </div>
                 </div>
             </div>
-        @elseif (isset($msg))
+        @elseif (session()->has('msg'))
             <div class="row">
                 <div class="col-8">
                     <div class="alert alert-success" role="alert">
-                        {{ $msg }}
+                        {{ session()->get('msg') }}
                     </div>
                 </div>
             </div>
         @endif
-        {!! Form::open(['url' => 'user/update', 'method' => 'post']) !!}
+        {!! Form::open(['url' => route('users.update', $user->id), 'method' => 'PUT']) !!}
             <div class="row">
                 <div class="col-8">
                     <label>Office</label>
@@ -54,7 +55,7 @@
                 </div>
             </div>
 
-            {!! Form::hidden('id', $id) !!}
+            {!! Form::hidden('id', $user->id) !!}
         {!! Form::close() !!}
     </div>
 </div>
